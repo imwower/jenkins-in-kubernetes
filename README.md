@@ -16,7 +16,7 @@ This Jenkins has the required tools to work in and with Kubernetes
 You can pull an already built version of this Jenkins image from [aliyun.com](https://aliyun.com).
 ```bash
 # Pull the image
-$ docker pull registry.cn-beijing.aliyuncs.com/im_wower/jenkins-in-kubernetes::lts-k8s
+$ docker pull registry.cn-beijing.aliyuncs.com/im_wower/jenkins-in-kubernetes:lts-k8s
 ```
 
 ### Build the Jenkins Docker image
