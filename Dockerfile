@@ -20,6 +20,7 @@ RUN /usr/local/bin/install-plugins.sh $(cat /usr/share/jenkins/plugins.txt) && \
 # Install Docker
 RUN apt-get -qq update && \
     apt-get -qq -y install curl && \
+    apt-get -qq -y install maven && \
     curl -sSL https://get.docker.com/ | sh
 
 # Install kubectl and helm
@@ -27,16 +28,3 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl && \
     curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
-   
-RUN kubectl config set-cluster dev \
-    --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
-    --embed-certs=true \
-    --server="https://kubernetes.default/" && \
-
-    kubectl config set-credentials user --token="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" && \
-
-    kubectl config set-context default \
-    --cluster=dev \
-    --user=user  && \
-
-    kubectl config use-context default
