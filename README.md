@@ -12,6 +12,14 @@ This Jenkins has the required tools to work in and with Kubernetes
 - `kubectl` command line client for working with the Kubernetes API
   **should mount `kube config` file to use `kubectl`
 
+### tag and version
+
+- tag: 20210107
+- version: 
+  - node: 14.x
+  - kubectl: v1.20.1
+  - helm: v3.3.4        
+
 ### pull the Docker image
 You can pull an already built version of this Jenkins image from `docker hub`.
 ```bash
