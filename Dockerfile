@@ -34,11 +34,10 @@ RUN apt-get install -y nodejs
 RUN curl -LO https://dl.k8s.io/$KUBECTL_VERSION/kubernetes-client-linux-amd64.tar.gz && \
     tar -xzvf kubernetes-client-linux-amd64.tar.gz && \
     mv kubernetes/client/bin/kubectl /usr/bin/ && \
-    chmod +x /usr/bin/kubectl && \
-    rm -rf kubernetes kubernetes-client-linux-amd64.tar.gz
+    chmod +x /usr/bin/kubectl
 
 # Install helm
-RUN curl -o helm.tar.gz -L https://get.helm.sh/helm-$HELM_VERSION-linux-arm64.tar.gz && \
+RUN curl -o helm.tar.gz -L https://get.helm.sh/helm-$HELM_VERSION-linux-amd64.tar.gz && \
     tar -xzvf helm.tar.gz && \
-    cp linux-amd64/helm /usr/local/bin/ && \
-    rm -rf linux-arm64 helm.tar.gz
+    mv linux-amd64/helm /usr/local/bin/ && \
+    chmod +x /usr/bin/helm
