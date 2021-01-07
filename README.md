@@ -1,105 +1,63 @@
 # Jenkins in Kubernetes
-This repository has a `Dockerfile` and a `helm` chart for setting up a simple Jenkins master for running in Kubernetes.
+This repo package Jenkins and other software, 
+such as: maven, docker, nodejs, kubectl, helm v3
+and other Jenkins plugins, see [plugins.txt](plugins.txt)
 
 This Jenkins has the required tools to work in and with Kubernetes
-- Jenkins application with pre-loaded plugins (see [plugins.txt](plugins.txt))
+- Jenkins' application with pre-loaded plugins (see [plugins.txt](plugins.txt))
 - Skipped setup wizard
-  - You can control admin user and password with `--set adminUser=${USER},adminPassword=${PASSWORD}`
+  - You can control admin user and password with `-e ADMIN_USER=<your_admin_user> -e ADMIN_PASSWORD=<password>`
   - You can add and remove plugins by editing the [plugins.txt](plugins.txt) file
 - Docker for managing a Docker CI lifecycle
 - `kubectl` command line client for working with the Kubernetes API
-- `helm` for managing your helm charts CI/CD lifecycle
+  **should mount `kube config` file to use `kubectl`
 
-**IMPORTANT:** This example is for demo and testing. It should not be used a production environment!
-
-### Get the example Docker image
-You can pull an already built version of this Jenkins image from [bintray.com](https://bintray.com).
+### pull the Docker image
+You can pull an already built version of this Jenkins image from `docker hub`.
 ```bash
 # Pull the image
-$ docker pull eldada-docker-examples.bintray.io/jenkins:lts-k8s
+$ docker pull imwower/jenkins-in-kubernetes
 ```
 
 ### Build the Jenkins Docker image
 You can build the image yourself
 ```bash
-$ export DOCKER_REG=SET_YOUR_DOCKER_REGISTRY_HERE
+$ git clone https://github.com/imwower/jenkins-in-kubernetes.git
 
 # Build the image
-$ docker build -t ${DOCKER_REG}/jenkins:lts-k8s .
+$ docker build -t jenkins -f Dockerfile \
+    --build-arg NODE_VERSION="14.x" \
+    --build-arg KUBECTL_VERSION="v1.20.1" \
+    --build-arg HELM_VERSION="v3.3.4" \
+    .
 
 # Push the image
-$ docker push ${DOCKER_REG}/jenkins:lts-k8s
+$ docker push jenkins
 ```
 
-### Test your image
+### run image using Docker
 You can run your container locally, if you have Docker installed
-- Using the pre-built image
+
 ```bash
-# Run the container you built before
-$ docker run -d --name jenkins -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock eldada-docker-examples.bintray.io/jenkins:lts-k8s
+$ docker run -d --name jenkins -p 8080:8080 \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /<your_jenkins_path>:/var/jenkins_home \
+    -v /<your_maven_m2_path>:/root/.m2 \
+    -v /<your_k8s_config_file>:/root/.kube/config \
+    -e ADMIN_USER=<your_admin_user> \
+    -e ADMIN_PASSWORD=<password>
+    jenkins
 
 ```
 
-- Using your built image
-```bash
-# Run the container you built before
-$ docker run -d --name jenkins -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock ${DOCKER_REG}/jenkins:lts-k8s
-
-```
 - Browse to http://localhost:8080 on your local browser
 
-### Deploy Jenkins helm chart to Kubernetes
-If you are using the pre-built image `eldada-docker-examples.bintray.io/jenkins:lts-k8s`, you can install the helm chart with
+### Use maven docker nodejs kubectl helm...
 ```bash
-# Deploy the Jenkins helm chart
-# (same command for install and upgrade)
-$ helm upgrade --install jenkins ./helm/jenkins-k8s
+$ mvn -v
+$ node -v
+$ npm -v
+$ docker -v
+$ kubectl version
+$ helm version
 ```
-**NOTE:** This helm chart deploys a pod with two containers. One for the Docker daemon and another for Jenkins. This is based on the suggestion in https://applatix.com/case-docker-docker-kubernetes-part-2/
-
-If you are building your own version of Jenkins, you need your Kubernetes cluster to be able to pull the Docker image.
-You have to create a Docker registry secret and reference to it in your `helm install` command.
-```bash
-# Create a Docker registry secret
-$ export DOCKER_REG=SET_YOUR_DOCKER_REGISTRY_HERE
-$ export DOCKER_USR=SET_YOUR_DOCKER_USERNAME_HERE
-$ export DOCKER_PWD=SET_YOUR_DOCKER_PASSWORD_HERE
-$ export DOCKER_EML=SET_YOUR_DOCKER_EMAIL_HERE
-
-$ kubectl create secret docker-registry docker-reg-secret \
-        --docker-server=${DOCKER_REG} \
-        --docker-username=${DOCKER_USR} \
-        --docker-password=${DOCKER_PWD} \
-        --docker-email=${DOCKER_EML}
-
-
-# Deploy the Jenkins helm chart
-# (same command for install and upgrade)
-$ helm upgrade --install jenkins \
-        --set imagePullSecrets=docker-reg-secret \
-        --set image.repository=${DOCKER_REG}/jenkins \
-        --set image.tag='lts-k8s' \
-        ./helm/jenkins-k8s
-```
-
-### Data persistence
-By default, in Kubernetes, the Jenkins deployment uses a persistent volume claim that is mounted to `/var/jenkins_home`.
-This assures your data is saved across crashes, restarts and upgrades.   
-
-### Vagrant
-You can test your Docker image using `Vagrant`. The enclosed [Vagrantfile](Vagrantfile) will provision an Ubuntu VM with Docker.
-
-- Spin up the Vagrant VM then build and run the Docker image
-```bash
-# Spin up the Vagrant VM
-$ vagrant up
-
-# SSH into the VM
-$ vagrant ssh
-
-# Go to the mounted sources repository
-$ cd /opt/provisioning
-
-# Build and run your Jenkins container as shown above
-```
-- Browse to http://localhost:8080 on your local browser

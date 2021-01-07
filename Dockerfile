@@ -1,5 +1,9 @@
 FROM jenkins/jenkins:lts
 
+ARG NODE_VERSION=14.x
+ARG KUBECTL_VERSION=v1.20.1
+ARG HELM_VERSION=v3.3.4
+
 # Running as root to have an easy support for Docker
 USER root
 
@@ -17,14 +21,24 @@ RUN /usr/local/bin/install-plugins.sh $(cat /usr/share/jenkins/plugins.txt) && \
     echo lts > /usr/share/jenkins/ref/jenkins.install.UpgradeWizard.state && \
     echo lts > /usr/share/jenkins/ref/jenkins.install.InstallUtil.lastExecVersion
 
-# Install Docker
-RUN apt-get -qq update && \
-    apt-get -qq -y install curl && \
+# Install Docker and maven
+RUN apt-get update && \
+    apt-get -y install maven && \
+    apt-get -y install curl && \
     curl -sSL https://get.docker.com/ | sh
+    
+RUN curl -sL https://deb.nodesource.com/setup_$NODE_VERSION | sh -
+RUN apt-get install -y nodejs
 
-# Install kubectl and helm
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && \
-    chmod +x ./kubectl && \
-    mv ./kubectl /usr/local/bin/kubectl && \
-    curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
+# Install kubectl
+RUN curl -LO https://dl.k8s.io/$KUBECTL_VERSION/kubernetes-client-linux-amd64.tar.gz && \
+    tar -xzvf kubernetes-client-linux-amd64.tar.gz && \
+    mv kubernetes/client/bin/kubectl /usr/bin/ && \
+    chmod +x /usr/bin/kubectl && \
+    rm -rf kubernetes kubernetes-client-linux-amd64.tar.gz
 
+# Install helm
+RUN curl -o helm.tar.gz -L https://get.helm.sh/helm-$HELM_VERSION-linux-arm64.tar.gz && \
+    tar -xzvf helm.tar.gz && \
+    cp linux-amd64/helm /usr/local/bin/ && \
+    rm -rf linux-arm64 helm.tar.gz
